@@ -1,11 +1,11 @@
 import os
 import re
 
-input_fname = 'devset/tweets.txt
-output_fname = 'data/post_train.txt
+input_fname = '/content/image-verification-corpus/mediaeval2016/devset/posts.txt'
+output_fname = '/content/IAN-mod/data/post_train.txt'
 
 #need to fix
-a_name = open("tweets.txt", "r")
+a_fname = open(input_fname, "r")
 tweets = a_name.readlines()
 a_fname.close()
 
@@ -14,7 +14,7 @@ del tweets[1]
 
 #need to find fake/real
 for i in tweets:
-    if(tweets[i].find('	fake') != -1)
+    if((i.find('	fake')) != -1)
          news[i] = 'fake'
     else
          news[i] = 'real'
@@ -26,7 +26,7 @@ tweets = [re.sub("[^a-zA-Z ]+", "", i) for i in tweets]
 
 
 #search for aspect terms
-output_fname = open("post_train.txt", "w")
+output_fname = open(output_fname, "w")
 for i in tweets:
     while(tweets[i].find(aspect_term) != -1){
         #replace aspect terms with aspect_term
@@ -40,7 +40,7 @@ for i in tweets:
         output_fname.writelines(output)
     }
 
-
+output_fname.close()
 
 
 
