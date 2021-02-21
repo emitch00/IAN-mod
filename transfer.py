@@ -1,5 +1,5 @@
 import nltk
-ntlk.download('punkt')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 import re
