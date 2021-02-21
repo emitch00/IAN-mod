@@ -36,7 +36,7 @@ for line in file:
               i = 'aspect_term'
             
 file.close()
-commonWordsFile.close()
+aspect_term_list.close()
 
 maplist = {}
 for i in maplist:
