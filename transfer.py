@@ -33,8 +33,7 @@ for line in file:
               if i not in count: 
                 count[i] = 0 
               count[i]+=1
-              
-                i = 'aspect_term'
+              i = 'aspect_term'
             
 file.close()
 commonWordsFile.close()
