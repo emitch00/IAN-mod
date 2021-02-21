@@ -1,77 +1,64 @@
-import os
+import nltk
+ntlk.download('punkt')
+nltk.download('stopwords')
+
 import re
+from nltk.tokenize import word_tokenize
 
-input_fname = '/content/image-verification-corpus/mediaeval2016/devset/posts.txt'
-output_fname = '/content/IAN-mod/data/post_train.txt'
+file = open("/content/groundtruth.txt", "r")
+#commonWordsFile = open("/content/commonWords.txt", "r")
 
-#need to fix
-a_fname = open(input_fname, "r")
-tweets = a_name.readlines()
-a_fname.close()
+count = {}
 
-#delete first line
-del tweets[1]
+for line in file:
+  commonWordsFile = open("/content/commonWords.txt", "r")
+  english = True
+  unique = True
+  word_token = re.split(" |\t", line)
+  fact = word_token[len(word_token) - 1]
+  fact = fact.rstrip("\n")
+  # remove extra information about tweet, like date, time
+  for i in range (0, 7):
+    word_token.pop()
 
-#need to find fake/real
-for i in tweets:
-    if((i.find('	fake')) != -1)
-         news[i] = 'fake'
-    else
-         news[i] = 'real'
-#keep only userID and tweet
-tweets = [i.split('http', 1)[0] for i in tweets]
-#remove all numeric values and whitespace after
-tweets = [re.sub("[^a-zA-Z ]+", "", i) for i in tweets]
-#tweets = [''.join(filter(i.isalpha(), tweets)) for i in tweets]
+  #print(word_token)
+  # make sure only processing the lines with real data -
+  if fact == 'real' or fact == 'fake':
+    for i in word_token: 
+      i = i.lower()
+      # filter out empty strings, numbers, http links, @handles, and 'rt'
+      if len(i) > 0 and (not (i.isdigit())) and i.find('http') == -1 and i[0] != "@" and i != 'rt':
+        # filter out words with non english letters
+        for letter in i:
+          if ord(letter) < 97 or ord(letter) > 122:
+            english = False
+            break
+        # only add to map if word has english letters
+        if (english):
+          # check that word isnt a common one
+          commonWordsFile = open("/content/commonWords.txt", "r")
+          for word in commonWordsFile:
+            word = word.rstrip("\n")
+            if word == i:
+              unique = False
+              break
 
+          if unique:
+            i = i + ", " + fact
+            if i not in count: 
+              count[i] = 0 
+            count[i]+=1
+            
+file.close()
+commonWordsFile.close()
 
-#search for aspect terms
-output_fname = open(output_fname, "w")
-for i in tweets:
-    while(tweets[i].find(aspect_term) != -1){
-        #replace aspect terms with aspect_term
-        re.sub("aspect_term", "aspect_term")
-        #to output file
+sorted_list = sorted(count, reverse = True, key = lambda x: count[x])
+sorted_count = {}
+for i in sorted_list:
+  sorted_count[i] = count.get(i)
 
-        #line
-        #aspect term
-        #fake/real
-        output = [tweet[i] + "\n", aspect_term + "\n", news[i] + "\n"]
-        output_fname.writelines(output)
-    }
+new_file = open("/content/sortedGroundtruth.txt", "w")
+for key, value in sorted_count.items():
+  new_file.write(key+" : "+str(value)+"\n")
 
-output_fname.close()
-
-
-
-
-#import os
-#import unicodedata
-#import xml.etree.ElementTree as ET
-#from errno import ENOENT
-
-
-#input_fname = 'data/restaurant/train.xml'
-#output_fname = 'data/restaurant/train.txt'
-
-#if not os.path.isfile(input_fname):
-    #raise IOError(ENOENT, 'Not an input file', input_fname)
-    
-#with open(output_fname, 'w') as f:
-    #tree = ET.parse(input_fname)
-    #root = tree.getroot()
-    #sentence_num = 0
-    #aspect_num = 0
-    #for sentence in root.iter('sentence'):
-        #sentence_num = sentence_num + 1
-        #text = sentence.find('text').text
-        #for asp_terms in sentence.iter('aspectTerms'):
-            #for asp_term in asp_terms.findall('aspectTerm'):
-                #if asp_term.get('polarity') != 'conflict' and asp_term.get('target') != 'NULL':
-                    #aspect_num = aspect_num + 1
-                    #new_text = ''.join((text[:int(asp_term.get('from'))], 'aspect_term', text[int(asp_term.get('to')):]))
-                    #f.write('%s\n' % new_text.strip())
-                    #f.write('%s\n' % asp_term.get('target'))
-                    #f.write('%s\n' % asp_term.get('polarity'))
-                    #print("Read %s sentences %s aspects" % (sentence_num, aspect_num))
-                    
+new_file.close()
