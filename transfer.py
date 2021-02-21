@@ -43,8 +43,8 @@ for i in maplist:
   maplist[i] = count.get(i)
   print(maplist)
 
-#new_file = open("/content/data_sort.txt", "w")
-#for key, value in sorted_count.items():
-  #new_file.write(line +" : "+str(value)+"\n")
+new_file = open("/content/data_sort.txt", "w")
+for key, value in sorted_count.items():
+  new_file.write(line +" : "+str(value)+"\n")
 
-#new_file.close()
+new_file.close()
