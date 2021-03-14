@@ -6,8 +6,14 @@ import os
 import time
 import math
 
+
+#initiallizing environmental variables
+
+#disables tensorflow from printing warning and error messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+#specifies which gpu tensorflow can use (tensorflow automatically uses all of them)
 os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.5
