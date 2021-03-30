@@ -19,25 +19,31 @@ config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.5
 tf.enable_eager_execution(config=config)
 
+#defining flag variables and setting initial values
+#flags for defining values for layers
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('embedding_dim', 300, 'dimension of word embedding')
 tf.app.flags.DEFINE_integer('n_hidden', 300, 'number of hidden unit')
 tf.app.flags.DEFINE_integer('n_class', 3, 'number of distinct class')
 tf.app.flags.DEFINE_float('l2_reg', 0.001, 'l2 regularization')
 
+#flags for initializing matrices
 tf.app.flags.DEFINE_integer('max_aspect_len', 0, 'max length of aspects')
 tf.app.flags.DEFINE_integer('max_context_len', 0, 'max length of contexts')
 tf.app.flags.DEFINE_string('embedding_matrix', '', 'word ids to word vectors')
 
+#defining parameters of network
 batch_size = 128
 learning_rate = 0.01
 n_epoch = 20
 pre_processed = 1
+#specifying embedding vectors
 embedding_file_name = 'data/glove.840B.300d.txt'
+#destination of outputs
 dataset = 'data/laptop/'
 logdir = 'logs/'
 
-
+#running training data and testing data through the model
 def run(model, train_data, test_data):
     print('Training ...')
     max_acc, max_f1, step = 0., 0., -1
