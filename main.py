@@ -50,14 +50,20 @@ def run(model, train_data, test_data):
     #f-score is measure of model's accuracy
     max_acc, max_f1, step = 0., 0., -1
 
+    #length of tensor
     train_data_size = len(train_data[0])
+    #slices of train_data tensor in the form of objects
     train_data = tf.data.Dataset.from_tensor_slices(train_data)
+    #shuffles tensor along first dimension and form batches
+    #buffer_size affects randomness of transformation
     train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
 
+    #same for test_data, no shuffle
     test_data_size = len(test_data[0])
     test_data = tf.data.Dataset.from_tensor_slices(test_data)
     test_data = test_data.batch(batch_size, drop_remainder=True)
 
+    #create an iterator for the train_data
     iterator = tf.data.Iterator.from_structure(train_data.output_types, train_data.output_shapes)
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     writer = tf.contrib.summary.create_file_writer(logdir)
