@@ -166,6 +166,7 @@ def main(_):
     end_time = time.time()
     print('Time Costing: %s' % (end_time - start_time))
 
-
+#checks for main function in file
 if __name__ == '__main__':
+    #sets up flags globally and runs main function
     tf.app.run()
