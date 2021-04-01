@@ -1,3 +1,5 @@
+#Questions on model.variables and evaluate()
+
 import tensorflow as tf
 from utils import get_data_info, read_data, load_word_embeddings
 from model import IAN
@@ -36,6 +38,7 @@ tf.app.flags.DEFINE_string('embedding_matrix', '', 'word ids to word vectors')
 batch_size = 128
 learning_rate = 0.01
 n_epoch = 20
+#pre_processed is a boolean variable that determines if the data has gone through transfer.py
 pre_processed = 1
 #specifying embedding vectors
 embedding_file_name = 'data/glove.840B.300d.txt'
