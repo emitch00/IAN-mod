@@ -123,11 +123,13 @@ def run(model, train_data, test_data):
         tf.contrib.summary.scalar('test_acc', test_acc)
         tf.contrib.summary.scalar('test_f1', test_f1)
 
-        #confirm that 
+        #change values of max_acc and max_f1 from initialization of 0
         if test_acc + test_f1 > max_acc + max_f1:
             max_acc = test_acc
             max_f1 = test_f1
+            #step changes to max # of epochs passed
             step = i
+            #save model variables to model folder
             saver = tf.contrib.eager.Saver(model.variables)
             saver.save('models/model_iter', global_step=step)
         print(
@@ -139,21 +141,28 @@ def run(model, train_data, test_data):
 
 
 def main(_):
+    #start timer
     start_time = time.time()
 
+    #load data
     print('Loading data info ...')
     word2id, FLAGS.max_aspect_len, FLAGS.max_context_len = get_data_info(dataset, pre_processed)
 
+    #load train_data and test_data
     print('Loading training data and testing data ...')
     train_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'train', pre_processed)
     test_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'test', pre_processed)
 
+    #load word vectors
     print('Loading pre-trained word vectors ...')
     FLAGS.embedding_matrix = load_word_embeddings(embedding_file_name, FLAGS.embedding_dim, word2id)
 
+    #define model using initialized FLAG values
     model = IAN(FLAGS)
+    #run model with train_data and test_data
     run(model, train_data, test_data)
 
+    #calculate time cost
     end_time = time.time()
     print('Time Costing: %s' % (end_time - start_time))
 
