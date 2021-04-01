@@ -46,6 +46,8 @@ logdir = 'logs/'
 #running training data and testing data through the model
 def run(model, train_data, test_data):
     print('Training ...')
+    #defining min values for f-score and accuracy + step value
+    #f-score is measure of model's accuracy
     max_acc, max_f1, step = 0., 0., -1
 
     train_data_size = len(train_data[0])
