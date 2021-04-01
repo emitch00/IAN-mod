@@ -63,32 +63,51 @@ def run(model, train_data, test_data):
     test_data = tf.data.Dataset.from_tensor_slices(test_data)
     test_data = test_data.batch(batch_size, drop_remainder=True)
 
-    #create an iterator for the train_data
+    #create an iterator for the train_data, not initialized
     iterator = tf.data.Iterator.from_structure(train_data.output_types, train_data.output_shapes)
+    #implements Adam algorithm using predefined learning rate
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    #creates a summary file to directory
     writer = tf.contrib.summary.create_file_writer(logdir)
     writer.set_as_default()
 
+    #loop through # of epochs
     for i in range(n_epoch):
+        #define initial cost and initialize prediction and label lists
         cost, predict_list, labels_list = 0., [], []
+        #initialize iterator to train_data
         iterator.make_initializer(train_data)
+        #loop through each batch in train_data
         for _ in range(math.floor(train_data_size / batch_size)):
+            #set data to the next value
             data = iterator.get_next()
+            #records relevant operations executed inside tf.GradientTape onto a "tape", use that tape to compute the gradients of recorded computation using reverse mode differentiation.
             with tf.GradientTape() as tape:
+                #send data through model with defined droupout rate, output predictions and labels
                 predict, labels = model(data, dropout=0.5)
+                #calculate loss
                 loss_t = tf.nn.softmax_cross_entropy_with_logits_v2(logits=predict, labels=labels)
                 loss = tf.reduce_mean(loss_t)
+                #calculate cost
                 cost += tf.reduce_sum(loss_t)
+            #recalculate gradients on tape using loss and values
             grads = tape.gradient(loss, model.variables)
+            #creates list of gradients and values and passes them to optimizer
             optimizer.apply_gradients(zip(grads, model.variables))
+            #adds all elements of numpy array after passing functions
             predict_list.extend(tf.argmax(tf.nn.softmax(predict), 1).numpy())
+            #adds all elements of numpy array after passing functions
             labels_list.extend(tf.argmax(labels, 1).numpy())
+        #somehow evaluates accuracy and f1-score
         train_acc, train_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
+        #calculate loss of all train_data
         train_loss = cost / train_data_size
+        #adds to summary file
         tf.contrib.summary.scalar('train_loss', train_loss)
         tf.contrib.summary.scalar('train_acc', train_acc)
         tf.contrib.summary.scalar('train_f1', train_f1)
 
+        #similar process for test_data, no need to calculate gradients
         cost, predict_list, labels_list = 0., [], []
         iterator.make_initializer(test_data)
         for _ in range(math.floor(test_data_size / batch_size)):
@@ -104,6 +123,7 @@ def run(model, train_data, test_data):
         tf.contrib.summary.scalar('test_acc', test_acc)
         tf.contrib.summary.scalar('test_f1', test_f1)
 
+        #confirm that 
         if test_acc + test_f1 > max_acc + max_f1:
             max_acc = test_acc
             max_f1 = test_f1
