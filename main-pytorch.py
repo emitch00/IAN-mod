@@ -68,4 +68,38 @@ def run(model, train_data, test_data):
       for _ in range(math.floor(test_data_size / batch_size)):
             data = iterator.get_next()
             predict, labels = model(data, dropout=1.0)
+            #torch.nn.functional.cross_entropy
+            loss_t = nn.CrossEntropyLoss()
+      test_acc, test_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
+      test_loss = cost/test_data_size
+      #write to summary
+      
+      if test_acc + test_f1 > max_acc + max_f1:
+            max_acc = test_acc
+            max_f1 = test_f1
+            step = i
+            #write to saver
             
+      #print to console
+  #print to console
+  
+def main(_):
+  #measure time
+  #loading data information
+  word2id, FLAGS.max_aspect_len, FLAGS.max_context_len = get_data_info(dataset, pre_processed)
+  
+  #loading training and test data
+  train_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'train', pre_processed)
+  test_data = read_data(word2id, FLAGS.max_aspect_len, FLAGS.max_context_len, dataset + 'test', pre_processed)
+  
+  #loading pre-trained word vectors
+  FLAGS.embedding_matrix = load_word_embeddings(embedding_file_name, FLAGS.embedding_dim, word2id)
+  
+  model = IAN(FLAGS)
+  run(model, train_data, test_data)
+  
+  #measure time
+  #print time cost
+  
+if __name__ == '__main__':
+  tf.app.run()
