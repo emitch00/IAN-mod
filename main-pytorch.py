@@ -1,5 +1,8 @@
 import torch
+import numpy
 import torch.nn.functional as F
+from absl import flags
+from absl import app
 from utils import get_data_info, read_data, load_word_embeddings
 from model import IAN
 from evals import *
@@ -11,7 +14,7 @@ import math
 
 #configuration settings
 
-FLAGS = flag.FLAGS
+FLAGS = flags.FLAGS
 flags.DEFINE_integer('embedding_dim', 300, 'dimension of word embedding')
 flags.DEFINE_integer('n_hidden', 300, 'number of hidden unit')
 flags.DEFINE_integer('n_class', 3, 'number of distinct class')
@@ -25,7 +28,8 @@ batch_size = 128
 learning_rate = 0.01
 n_epoch = 20
 pre_processed = 1
-embedding_file_name = 'data/glove.840B.300d.txt'
+embedding_file_name = '/content/IAN/data/Copy of glove.840B.300d.txt'
+dataset = '/content/IAN/data/laptop/'
 #setting dataset and log directory
 
 def run(model, train_data, test_data):
@@ -33,36 +37,53 @@ def run(model, train_data, test_data):
   max_acc, max_f1, step = 0., 0., -1
 
   train_data_size = len(train_data[0])
-  train_data = F.Tensor.narrow(train_data) #check on whether .Dataset matters
-  train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
-    
+  #print(train_data[1])
+  #train_data= train_data.Compose([train_data.ToTensor(), ])
+  #train_data = train_data.reshape((2313, 1))
+  #train_data = numpy.asarray(train_data[1])
+  #print(train_data.size)
+  #print(train_data[1])
+  #train_data = torch.nn.utils.rnn.pad_sequence(train_data, batch_first=True)
+  #train_data = torch.Tensor(train_data)
+  #train_data = np.asarray(train_data[0])
+  #train_data = torch.from_numpy(train_data[0])
+  #train_data = torch.narrow(train_data, 1, 2, ) #check on whether .Dataset matters
+  #train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
+  train_data = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle = True, drop_last = True)
+
   test_data_size = len(test_data[0])
-  test_data = F.Tensor.narrow(test_data) #check on whether .Dataset matters
-  test_data = test_data.batch(batch_size, drop_remainder=True)#check whether we need shuffle or not
+  test_data = torch.utils.data.DataLoader(test_data, batch_size = batch_size, shuffle = False, drop_last = True)
+  #test_data = torch.Tensor(test_data)
+  #test_data = test_data.numpy()
+  #test_data = np.asarray(test_data)
+  #test_data = torch.from_numpy(test_data)
+  #test_data = torch.narrow(test_data[0]) #check on whether .Dataset matters
+  #test_data = test_data.batch(batch_size, drop_remainder=True)#check whether we need shuffle or not
     
-  iterator = torchtext.data.iterator(train_data.output_types, train_data.output_shapes)
-  optimizer = optim.Adam(lr=learning_rate)
+  iterator_train_data = iter(train_data)
+  iterator_test_data = iter(test_data)
+  #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
   #write to log directory
     
   for i in range(n_epoch):
     cost, predict_list, labels_list = 0., [], []
     #not sure about this
-    iterator = torchtext.data.iterator(train_data.output_types, train_data.output_shapes)
     for _ in range(math.floor(train_data_size / batch_size)):
-      data = iterator.get_next()
-      #replacing tape
-      predict, labels = model(data, dropout = 0.5)
-      loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
-      loss = F.mean(loss_t)
-      cost += F.sum(loss_t)
+        data = iterator_train_data.next()
+        print(data)
+        #replacing tape
+        predict, labels = model(data, dropout = 0.5)
+        loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
+        loss = F.mean(loss_t)
+        cost += F.sum(loss_t)
         
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-      #torch.autograd()
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        #torch.autograd()
         
-      predict_list.extend(F.argmax(F.softmax(predict)).numpy())
-      labels_list.extend(F.argmax(labels).numpy())
+        predict_list.extend(F.argmax(F.softmax(predict)).numpy())
+        labels_list.extend(F.argmax(labels).numpy())
         
         
     train_acc, train_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
@@ -70,12 +91,11 @@ def run(model, train_data, test_data):
     #write to summary
       
     cost, predict_list, labels_list = 0., [], []
-    iterator = torchtext.data.iterator(test_data.output_types, test_data.output_shapes)
     for _ in range(math.floor(test_data_size / batch_size)):
-      data = iterator.get_next()
-      predict, labels = model(data, dropout=1.0)
-      #torch.nn.functional.cross_entropy
-      loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
+        data = iterator_test_data.next()
+        predict, labels = model(data, dropout=1.0)
+        #torch.nn.functional.cross_entropy
+        loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
     
     test_acc, test_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
     test_loss = cost/test_data_size
@@ -87,7 +107,9 @@ def run(model, train_data, test_data):
       step = i
       #write to saver
             
+    print('epoch %s: train-loss=%.6f; train-acc=%.6f; train-f1=%.6f; test-loss=%.6f; test-acc=%.6f; test-f1=%.6f.' % (str(i), train_loss, train_acc, train_f1, test_loss, test_acc, test_f1))  
       #print to console
+  print('The max accuracy of testing results: acc %.6f and macro-f1 %.6f of step %s' % (max_acc, max_f1, step))
   #print to console
   
 def main(_):
@@ -109,4 +131,4 @@ def main(_):
   #print time cost
   
 if __name__ == '__main__':
-  tf.app.run()
+  app.run(main)
