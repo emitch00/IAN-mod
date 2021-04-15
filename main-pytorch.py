@@ -60,8 +60,8 @@ def run(model, train_data, test_data):
   #test_data = torch.narrow(test_data[0]) #check on whether .Dataset matters
   #test_data = test_data.batch(batch_size, drop_remainder=True)#check whether we need shuffle or not
     
-  iterator_train_data = iter(train_data)
-  iterator_test_data = iter(test_data)
+  #iterator_train_data = iter(train_data)
+  #iterator_test_data = iter(test_data)
   #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
   #write to log directory
     
@@ -69,8 +69,8 @@ def run(model, train_data, test_data):
     cost, predict_list, labels_list = 0., [], []
     #not sure about this
     for _ in range(math.floor(train_data_size / batch_size)):
-        data = iterator_train_data.next()
-        print(data)
+        #data = iterator_train_data.next()
+        #print(data)
         #replacing tape
         predict, labels = model(data, dropout = 0.5)
         loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
