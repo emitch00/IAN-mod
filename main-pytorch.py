@@ -116,7 +116,8 @@ def run(model, train_data, test_data):
       #replacing tape
       predict, labels = model(data, dropout = 0.5)
       #print(labels)
-      loss_t = F.nll_loss(torch.nn.LogSoftmax(predict), labels)
+      l = torch.nn.CrossEntropyLoss()
+      loss_t = l(predict,labels)
       loss = F.mean(loss_t)
       cost += F.sum(loss_t)
         
