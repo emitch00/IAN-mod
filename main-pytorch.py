@@ -1,6 +1,7 @@
 import torch
 import numpy
 import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader
 from absl import flags
 from absl import app
 from utils import get_data_info, read_data, load_word_embeddings
@@ -32,24 +33,44 @@ embedding_file_name = '/content/IAN/data/Copy of glove.840B.300d.txt'
 dataset = '/content/IAN/data/laptop/'
 #setting dataset and log directory
 
+class IAN_Data(Dataset):
+    def __init__(self, dataset):
+        self.aspects = torch.from_numpy(np.array(dataset[0]))
+        self.contexts = torch.from_numpy(np.array(dataset[1]))
+        self.labels = torch.from_numpy(np.array(dataset[2]))
+        self.aspect_lens = torch.from_numpy(np.array(dataset[3]))
+        self.context_lens = torch.from_numpy(np.array(dataset[4]))
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        return (self.aspects[idx], self.contexts[idx], self.labels[idx], self.aspect_lens[idx], self.context_lens[idx])
+
+
+
+
 def run(model, train_data, test_data):
   print('Training ...')
   max_acc, max_f1, step = 0., 0., -1
 
+  train_dataset = IAN_Data(train_data)
   train_data_size = len(train_data[0])
-  print(type(train_data))
+  #print(type(train_data))
   #print(train_data)
-  train_data = list(train_data)
+  #train_data = list(train_data)
   #print(train_data.shape)
-  #train_data = np.array(train_data[])
+  #train_data = np.array(train_data[1])
   #train_data = torch.tensor(np.asarray(train_data))
-  print(type(train_data))
+  #print(type(train_data))
   #print(train_data)
 
-  train_data = torch.stack(train_data[0:5], dim=0)
 
-  train_data.narrow(0, 0, 2)
-  print(train_data)
+
+  #train_data = torch.stack(train_data[0:5], dim=0)
+
+  #train_data.narrow(0, 0, 2)
+  #print(train_data)
   #print(train_data[1])
   #train_data= train_data.Compose([train_data.ToTensor(), ])
   #train_data = train_data.reshape((2313, 1))
@@ -62,9 +83,9 @@ def run(model, train_data, test_data):
   #train_data = torch.from_numpy(train_data[0])
   #train_data = torch.narrow(train_data, 1, 2, ) #check on whether .Dataset matters
   #train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
-  train_data = torch.utils.data.BufferedShuffleDataset(train_data, buffer_size = train_data_size)
-  print(list(torch.utils.data.DataLoader(train_data, batch_size=batch_size, drop_last = True)))
-  train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, drop_last = True)
+  #train_dataloader = torch.utils.data.BufferedShuffleDataset(train_dataset, buffer_size = train_data_size)
+  #print(list(torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, drop_last = True)))
+  train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last = True)
 
   test_data_size = len(test_data[0])
   test_data = torch.utils.data.DataLoader(test_data, batch_size = batch_size, shuffle = False, drop_last = True)
@@ -88,14 +109,14 @@ def run(model, train_data, test_data):
     #data = it(train_data)
     #not sure about this
     for _, data in enumerate(train_loader):
-      predict, labels = data
+      aspects, contexts, labels, aspect_lens, context_lens = data[0], data[1], data[2], data[3], data[4]
       #print(it_train_data)
-      x = x + 1
+      #x = x + 1
       #print(data)
       #replacing tape
       predict, labels = model(data, dropout = 0.5)
-      print(labels)
-      loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
+      #print(labels)
+      loss_t = F.nll_loss(torch.nn.LogSoftmax(predict), labels)
       loss = F.mean(loss_t)
       cost += F.sum(loss_t)
         
