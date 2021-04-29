@@ -54,94 +54,46 @@ def run(model, train_data, test_data):
   print('Training ...')
   max_acc, max_f1, step = 0., 0., -1
 
-  train_dataset = IAN_Data(train_data)
   train_data_size = len(train_data[0])
-  #print(type(train_data))
-  #print(train_data)
-  #train_data = list(train_data)
-  #print(train_data.shape)
-  #train_data = np.array(train_data[1])
-  #train_data = torch.tensor(np.asarray(train_data))
-  #print(type(train_data))
-  #print(train_data)
-
-
-
-  #train_data = torch.stack(train_data[0:5], dim=0)
-
-  #train_data.narrow(0, 0, 2)
-  #print(train_data)
-  #print(train_data[1])
-  #train_data= train_data.Compose([train_data.ToTensor(), ])
-  #train_data = train_data.reshape((2313, 1))
-  #train_data = numpy.asarray(train_data[1])
-  #print(train_data.size)
-  #print(train_data[1])
-  #train_data = torch.nn.utils.rnn.pad_sequence(train_data, batch_first=True)
-  #train_data = torch.Tensor(train_data)
-  #train_data = np.asarray(train_data[0])
-  #train_data = torch.from_numpy(train_data[0])
-  #train_data = torch.narrow(train_data, 1, 2, ) #check on whether .Dataset matters
-  #train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
-  #train_dataloader = torch.utils.data.BufferedShuffleDataset(train_dataset, buffer_size = train_data_size)
-  #print(list(torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, drop_last = True)))
+  train_dataset = IAN_Data(train_data)
   train_loader = DataLoader(train_dataset, batch_size=batch_size, drop_last = True)
 
   test_data_size = len(test_data[0])
-  test_data = torch.utils.data.DataLoader(test_data, batch_size = batch_size, shuffle = False, drop_last = True)
-  #test_data = torch.Tensor(test_data)
-  #test_data = test_data.numpy()
-  #test_data = np.asarray(test_data)
-  #test_data = torch.from_numpy(test_data)
-  #test_data = torch.narrow(test_data[0]) #check on whether .Dataset matters
-  #test_data = test_data.batch(batch_size, drop_remainder=True)#check whether we need shuffle or not
+  test_dataset = IAN_Data(test_data)
+  test_loader = DataLoader(test_dataset, batch_size = batch_size, shuffle = False, drop_last = True)
     
-  #it_train_data = iter(train_data)
-  #iterator_test_data = iter(test_data)
-  #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-  #write to log directory
+  #optimizer = torch.optim.Adam(model.config(), lr=learning_rate)
     
   for i in range(n_epoch):
     cost, predict_list, labels_list = 0., [], []
-    #print(it_train_data)
-    x = 0
-    #data = it_train_data
-    #data = it(train_data)
-    #not sure about this
     for _, data in enumerate(train_loader):
       aspects, contexts, labels, aspect_lens, context_lens = data[0], data[1], data[2], data[3], data[4]
-      #print(it_train_data)
-      #x = x + 1
-      #print(data)
-      #replacing tape
+      
       predict, labels = model(data, dropout = 0.5)
-      #print(labels)
-      m = torch.nn.LogSoftmax(dim=1)
-      loss_t = torch.nn.NLLLoss(m(predict),labels)
+      loss_t = nn.CrossEntropyLoss(predict, labels)
       loss = F.mean(loss_t)
-      cost += F.sum(loss_t)
         
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
       #torch.autograd()
-
-      print(x)  
+ 
       predict_list.extend(F.argmax(F.softmax(predict)).numpy())
       labels_list.extend(F.argmax(labels).numpy())
-      print(labels_list)
         
         
     train_acc, train_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
-    train_loss = cost / train_data_size
     #write to summary
       
     cost, predict_list, labels_list = 0., [], []
-    for _ in range(math.floor(test_data_size / batch_size)):
-        data = iterator_test_data.next()
-        predict, labels = model(data, dropout=1.0)
-        #torch.nn.functional.cross_entropy
-        loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
+    for _, data in enumerate(test_loader):
+      aspects, contexts, labels, aspect_lens, context_lens = data[0], data[1], data[2], data[3], data[4]
+      
+      predict, labels = model(data, dropout=1.0)
+      loss_t = nn.CrossEntropyLoss(predict, labels)
+
+      predict_list.extend(F.argmax(F.softmax(predict)).numpy())
+      labels_list.extend(F.argmax(labels).numpy())
     
     test_acc, test_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
     test_loss = cost/test_data_size
