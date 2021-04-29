@@ -37,7 +37,20 @@ def run(model, train_data, test_data):
   max_acc, max_f1, step = 0., 0., -1
 
   train_data_size = len(train_data[0])
-  train_data = list(train_data)
+  print(type(train_data))
+  #print(train_data)
+  #train_data = list(train_data)
+  print(view(train_data))
+  #train_data = np.asarray(train_data)
+
+  #train_data = torch.tensor(np.asarray(train_data))
+  print(type(train_data))
+  #print(train_data)
+
+  train_data = torch.stack(torch.from_numpy(train_data), dim=0)
+
+  train_data.narrow(0, 0, 2)
+  print(train_data)
   #print(train_data[1])
   #train_data= train_data.Compose([train_data.ToTensor(), ])
   #train_data = train_data.reshape((2313, 1))
@@ -50,7 +63,9 @@ def run(model, train_data, test_data):
   #train_data = torch.from_numpy(train_data[0])
   #train_data = torch.narrow(train_data, 1, 2, ) #check on whether .Dataset matters
   #train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
-  train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle = True, drop_last = True)
+  train_data = torch.utils.data.BufferedShuffleDataset(train_data, buffer_size = train_data_size)
+  print(list(torch.utils.data.DataLoader(train_data, batch_size=batch_size, drop_last = True)))
+  train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, drop_last = True)
 
   test_data_size = len(test_data[0])
   test_data = torch.utils.data.DataLoader(test_data, batch_size = batch_size, shuffle = False, drop_last = True)
@@ -68,18 +83,17 @@ def run(model, train_data, test_data):
     
   for i in range(n_epoch):
     cost, predict_list, labels_list = 0., [], []
-    print(it_train_data)
+    #print(it_train_data)
     x = 0
     #data = it_train_data
-    data = it(train_data)
+    #data = it(train_data)
     #not sure about this
-    for _ in range(math.floor(train_data_size / batch_size)):
-      print(it_train_data)
+    for _, data in enumerate(train_loader):
+      predict, labels = data
+      #print(it_train_data)
       x = x + 1
-      data = train_data.next()
       #print(data)
       #replacing tape
-      print(data)
       predict, labels = model(data, dropout = 0.5)
       print(labels)
       loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
