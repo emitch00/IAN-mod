@@ -39,15 +39,14 @@ def run(model, train_data, test_data):
   train_data_size = len(train_data[0])
   print(type(train_data))
   #print(train_data)
-  #train_data = list(train_data)
-  print(view(train_data))
-  #train_data = np.asarray(train_data)
-
+  train_data = list(train_data)
+  #print(train_data.shape)
+  #train_data = np.array(train_data[])
   #train_data = torch.tensor(np.asarray(train_data))
   print(type(train_data))
   #print(train_data)
 
-  train_data = torch.stack(torch.from_numpy(train_data), dim=0)
+  train_data = torch.stack(train_data[0:5], dim=0)
 
   train_data.narrow(0, 0, 2)
   print(train_data)
