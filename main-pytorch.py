@@ -37,6 +37,7 @@ def run(model, train_data, test_data):
   max_acc, max_f1, step = 0., 0., -1
 
   train_data_size = len(train_data[0])
+  train_data = list(train_data)
   #print(train_data[1])
   #train_data= train_data.Compose([train_data.ToTensor(), ])
   #train_data = train_data.reshape((2313, 1))
@@ -49,7 +50,7 @@ def run(model, train_data, test_data):
   #train_data = torch.from_numpy(train_data[0])
   #train_data = torch.narrow(train_data, 1, 2, ) #check on whether .Dataset matters
   #train_data = train_data.shuffle(buffer_size=train_data_size).batch(batch_size, drop_remainder=True)
-  train_data = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle = True, drop_last = True)
+  train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle = True, drop_last = True)
 
   test_data_size = len(test_data[0])
   test_data = torch.utils.data.DataLoader(test_data, batch_size = batch_size, shuffle = False, drop_last = True)
@@ -60,30 +61,40 @@ def run(model, train_data, test_data):
   #test_data = torch.narrow(test_data[0]) #check on whether .Dataset matters
   #test_data = test_data.batch(batch_size, drop_remainder=True)#check whether we need shuffle or not
     
-  #iterator_train_data = iter(train_data)
+  #it_train_data = iter(train_data)
   #iterator_test_data = iter(test_data)
   #optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
   #write to log directory
     
   for i in range(n_epoch):
     cost, predict_list, labels_list = 0., [], []
+    print(it_train_data)
+    x = 0
+    #data = it_train_data
+    data = it(train_data)
     #not sure about this
     for _ in range(math.floor(train_data_size / batch_size)):
-        #data = iterator_train_data.next()
-        #print(data)
-        #replacing tape
-        predict, labels = model(data, dropout = 0.5)
-        loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
-        loss = F.mean(loss_t)
-        cost += F.sum(loss_t)
+      print(it_train_data)
+      x = x + 1
+      data = train_data.next()
+      #print(data)
+      #replacing tape
+      print(data)
+      predict, labels = model(data, dropout = 0.5)
+      print(labels)
+      loss_t = F.nll_loss(F.LogSoftmax(predict), labels)
+      loss = F.mean(loss_t)
+      cost += F.sum(loss_t)
         
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        #torch.autograd()
-        
-        predict_list.extend(F.argmax(F.softmax(predict)).numpy())
-        labels_list.extend(F.argmax(labels).numpy())
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
+      #torch.autograd()
+
+      print(x)  
+      predict_list.extend(F.argmax(F.softmax(predict)).numpy())
+      labels_list.extend(F.argmax(labels).numpy())
+      print(labels_list)
         
         
     train_acc, train_f1, _, _ = evaluate(pred=predict_list, gold=labels_list)
